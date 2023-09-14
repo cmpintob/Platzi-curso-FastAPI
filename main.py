@@ -79,5 +79,6 @@ def delete_movie(id: int):
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
+            return movies
     return movies
 
