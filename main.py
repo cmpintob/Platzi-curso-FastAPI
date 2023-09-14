@@ -37,4 +37,16 @@ def get_movie(id: int):
     for item in movies:
         if item["id"] == id:
             return item
-    return "No existen peliculas con este codigo"
+    return "No existen peliculas con este código"
+
+@app.get('/movies/', tags=['movies'])
+def get_movies_by_category(category: str, year: int):
+    '''mi solucion al reto de retornar peliculas por categoría'''
+    """accu = []
+    for item in movies:
+        if item["category"] == category:
+            accu.append(item)
+    return accu"""
+    '''solucion del profe para el reto de peliculas por categoría'''
+    return [item for item in movies if item["category"] == category]
+
