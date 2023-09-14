@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 app = FastAPI()
@@ -9,11 +9,23 @@ app.version = "0.0.1"
 
 class Movie(BaseModel):
     id: Optional[int] = None
-    title: str
-    overview: str
-    year: int
-    rating: float
-    category: str
+    title: str = Field(min_length=5, max_length=15)
+    overview: str = Field(min_length=15, max_length=50)
+    year: int = Field(le=2023)
+    rating: float = Field(gt=0, le=10.0)
+    category: str = Field(min_length=5, max_length=15)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "title": "My movie",
+                "overview": "Description of my movie",
+                "year": 2023,
+                "rating": 9.2,
+                "category": "Horror"
+            }
+        }
 
 movies = [
     {
@@ -50,7 +62,7 @@ def get_movie(id: int):
     return "No existen peliculas con este código"
 
 @app.get('/movies/', tags=['movies'])
-def get_movies_by_category(category: str, year: int):
+def get_movies_by_category(category: str):
     '''mi solucion al reto de retornar peliculas por categoría'''
     """accu = []
     for item in movies:
