@@ -1,13 +1,13 @@
-from fastapi import FastAPI, Body, Path, Query, requests, HTTPException, Depends
+from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security.http import HTTPAuthorizationCredentials
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 from typing import Any, Coroutine, Optional, List
-from starlette.requests import Request
 from jwt_manager import create_token, validate_token
 from config.database import Session, engine, Base
 from models.movie import Movie as MovieModel
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 app.title = "Mi aplicacion con FastAPI"
@@ -18,7 +18,7 @@ Base.metadata.create_all(bind=engine)
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
         auth = await super().__call__(request)
-        data = validate_token(auth)
+        data = validate_token(auth.credentials)
         if data['email'] != "admin@gmail.com":
             raise HTTPException(status_code=403, detail="Las credenciales son invalidas")
 
@@ -77,7 +77,9 @@ def login(user:User):
 
 @app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
-    return JSONResponse(status_code=200, content=movies)
+    db = Session()
+    result = db.query(MovieModel).all()
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
