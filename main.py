@@ -6,10 +6,14 @@ from pydantic import BaseModel, Field
 from typing import Any, Coroutine, Optional, List
 from starlette.requests import Request
 from jwt_manager import create_token, validate_token
+from config.database import Session, engine, Base
+from models.movie import Movie as MovieModel
 
 app = FastAPI()
 app.title = "Mi aplicacion con FastAPI"
 app.version = "0.0.1"
+
+Base.metadata.create_all(bind=engine)
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
@@ -96,7 +100,13 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -
 
 @app.post('/movies', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
-    movies.append(movie)
+    '''modelo con base de datos'''
+    db = Session()
+    new_movie = MovieModel(**movie.dict())
+    db.add(new_movie)
+    db.commit()
+    '''modelo inicial con archivos de texto y clases internas'''
+    '''movies.append(movie)'''
     return JSONResponse(status_code=201, content={"Response": "Pelicula Creada"})
 
 @app.put('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
