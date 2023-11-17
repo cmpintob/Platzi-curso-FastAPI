@@ -83,13 +83,29 @@ def get_movies() -> List[Movie]:
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
-    for item in movies:
+    """actualizacion de la consulta con base de datos"""
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={'nessage':"Pelicula no encontrada"})
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+    """Solucion anterior local"""
+    """for item in movies:
         if item["id"] == id:
             return JSONResponse(status_code=200, content=item)
-    return JSONResponse(status_code=404, content=[])
+    return JSONResponse(status_code=404, content=[])"""
 
 @app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
+
+    '''Version con base de datos'''
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.category == category).all()
+    if not result:
+        return JSONResponse(status_code=404, content={'nessage':"Pelicula no encontrada"})
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+
+    '''Caso desactualizado'''
     '''mi solucion al reto de retornar peliculas por categoría'''
     """accu = []
     for item in movies:
@@ -97,9 +113,11 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -
             accu.append(item)
     return accu"""
     '''solucion del profe para el reto de peliculas por categoría'''
+    """
     data = [item for item in movies if item["category"] == category]
     return JSONResponse(status_code=200, content=data)
-
+    """
+    
 @app.post('/movies', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
     '''modelo con base de datos'''
