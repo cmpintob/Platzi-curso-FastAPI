@@ -97,7 +97,6 @@ def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
 
 @app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
-
     '''Version con base de datos'''
     db = Session()
     result = db.query(MovieModel).filter(MovieModel.category == category).all()
@@ -131,6 +130,20 @@ def create_movie(movie: Movie) -> dict:
 
 @app.put('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def modify_movie(id: int, movie: Movie) -> dict:
+    """actualizacion con base de datos"""
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={"Response": "No existen peliculas con el ID indicado"})
+    result.title = movie.title
+    result.overview = movie.overview
+    result.year = movie.year
+    result.rating = movie.rating
+    result.category = movie.category
+    db.commit()
+    return JSONResponse(status_code=200, content={"Response": "Su pelicula ha sido actualizada"})
+    """formato local anterior"""
+    """
     for item in movies:
         if item["id"] == id:
             item["title"] = movie.title
@@ -140,12 +153,23 @@ def modify_movie(id: int, movie: Movie) -> dict:
             item["category"] = movie.category
             return JSONResponse(status_code=200, content={"Response": "Su pelicula ha sido actualizada"})
     return JSONResponse(status_code=404, content={"Response": "No existen peliculas con el ID indicado"})
+    """
 
 @app.delete('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def delete_movie(id: int) -> dict:
+    """actualizacion con base de datos"""
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={"Response": "No existen peliculas con el ID indicado"})
+    db.delete(result)
+    db.commit()
+    return JSONResponse(status_code=200, content={"Response": "Pelicula eliminada satisfactoriamente"})
+    """Formato local anterior"""
+    """
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
             return JSONResponse(status_code=200, content={"Response": "Pelicula eliminada exitosamente"})
     return JSONResponse(status_code=404, content={"Response": "No existen peliculas con el ID indicado"})
-
+    """
