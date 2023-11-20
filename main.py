@@ -11,7 +11,7 @@ from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 app.title = "Mi aplicacion con FastAPI"
-app.version = "0.0.1"
+app.version = "0.0.2"
 
 Base.metadata.create_all(bind=engine)
 
@@ -83,54 +83,34 @@ def get_movies() -> List[Movie]:
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
-    """actualizacion de la consulta con base de datos"""
+
     db = Session()
     result = db.query(MovieModel).filter(MovieModel.id == id).first()
     if not result:
         return JSONResponse(status_code=404, content={'nessage':"Pelicula no encontrada"})
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
-    """Solucion anterior local"""
-    """for item in movies:
-        if item["id"] == id:
-            return JSONResponse(status_code=200, content=item)
-    return JSONResponse(status_code=404, content=[])"""
 
 @app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
-    '''Version con base de datos'''
+
     db = Session()
     result = db.query(MovieModel).filter(MovieModel.category == category).all()
     if not result:
         return JSONResponse(status_code=404, content={'nessage':"Pelicula no encontrada"})
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
-
-    '''Caso desactualizado'''
-    '''mi solucion al reto de retornar peliculas por categoría'''
-    """accu = []
-    for item in movies:
-        if item["category"] == category:
-            accu.append(item)
-    return accu"""
-    '''solucion del profe para el reto de peliculas por categoría'''
-    """
-    data = [item for item in movies if item["category"] == category]
-    return JSONResponse(status_code=200, content=data)
-    """
     
 @app.post('/movies', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
-    '''modelo con base de datos'''
+
     db = Session()
     new_movie = MovieModel(**movie.dict())
     db.add(new_movie)
     db.commit()
-    '''modelo inicial con archivos de texto y clases internas'''
-    '''movies.append(movie)'''
     return JSONResponse(status_code=201, content={"Response": "Pelicula Creada"})
 
 @app.put('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def modify_movie(id: int, movie: Movie) -> dict:
-    """actualizacion con base de datos"""
+
     db = Session()
     result = db.query(MovieModel).filter(MovieModel.id == id).first()
     if not result:
@@ -142,22 +122,10 @@ def modify_movie(id: int, movie: Movie) -> dict:
     result.category = movie.category
     db.commit()
     return JSONResponse(status_code=200, content={"Response": "Su pelicula ha sido actualizada"})
-    """formato local anterior"""
-    """
-    for item in movies:
-        if item["id"] == id:
-            item["title"] = movie.title
-            item["overview"] = movie.overview
-            item["year"] = movie.year
-            item["rating"] = movie.rating
-            item["category"] = movie.category
-            return JSONResponse(status_code=200, content={"Response": "Su pelicula ha sido actualizada"})
-    return JSONResponse(status_code=404, content={"Response": "No existen peliculas con el ID indicado"})
-    """
-
+    
 @app.delete('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def delete_movie(id: int) -> dict:
-    """actualizacion con base de datos"""
+
     db = Session()
     result = db.query(MovieModel).filter(MovieModel.id == id).first()
     if not result:
@@ -165,11 +133,4 @@ def delete_movie(id: int) -> dict:
     db.delete(result)
     db.commit()
     return JSONResponse(status_code=200, content={"Response": "Pelicula eliminada satisfactoriamente"})
-    """Formato local anterior"""
-    """
-    for item in movies:
-        if item["id"] == id:
-            movies.remove(item)
-            return JSONResponse(status_code=200, content={"Response": "Pelicula eliminada exitosamente"})
-    return JSONResponse(status_code=404, content={"Response": "No existen peliculas con el ID indicado"})
-    """
+    
